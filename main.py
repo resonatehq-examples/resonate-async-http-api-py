@@ -1,22 +1,15 @@
 # python std
 import time, uuid
 # fast api
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, HTTPException
 # resonate
-from resonate import Resonate, Context
+from resonate import Resonate
 
 app = FastAPI()
 
 # Initialize Resonate - for production, configure with external store
-resonate = Resonate()
+resonate = Resonate().remote(group="gateway")
 
-# Register your durable functions with @resonate.register
-# IMPORTANT: All parameters must be serializable
-@resonate.register
-def foo(context: Context, data):
-    # Add your processing, external API calls, database operations, etc.
-    # IMPORTANT: Return values must be serializable
-    return {"result": f"Processed: {data}", "timestamp": time.time()}
 
 @app.post("/begin")
 def begin(data=None, id=None):
@@ -29,8 +22,8 @@ def begin(data=None, id=None):
     if data is None:
         data = {"foo": "bar"}
 
-    # This starts durable execution - the function will complete even if this process dies
-    handle = resonate.begin_rpc(func=foo, id=id, data=data)
+    # This starts durable execution remotelly at any node registered under worker group - the function will complete even if this process dies
+    handle = resonate.options(target="poll://any@worker").begin_rpc(func="foo", id=id, data=data)
 
     return {
         "promise": handle.id,

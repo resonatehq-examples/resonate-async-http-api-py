@@ -19,12 +19,22 @@ This template demonstrates the async request/response pattern with durable execu
    uv sync
    ```
 
-3. **Run the server**
+3. **Run the resonate server**
+  ```bash
+  resonate serve --aio-store-sqlite-path :memory: --api-http-cors-allow-origin "*" --aio-sender-plugin-poll-cors-allow-origin "*"
+  ```
+
+4. **Run the server**
    ```bash
    uv run uvicorn main:app --reload
    ```
 
-4. **Test the API**
+5. **Run the worker**
+  ```bash
+  python worker.py
+  ```
+
+6. **Test the API**
    ```bash
    # Start a new durable execution (with your own ID for deduplication)
    curl -X POST "http://127.0.0.1:8000/begin?id=your-unique-id" \
